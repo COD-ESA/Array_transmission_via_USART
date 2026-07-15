@@ -1,0 +1,56 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "base",
+            "displayName": "Base Configuration",
+            "description": "Базовые настройки для кросс-компиляции STM32",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_SYSTEM_NAME": "Generic",
+                "CMAKE_SYSTEM_PROCESSOR": "arm",
+                "CMAKE_TRY_COMPILE_TARGET_TYPE": "STATIC_LIBRARY",
+                "comment_3": "Все компиляторы должны быть добавлены в переменные среды ОС",
+                "CMAKE_C_COMPILER": "arm-none-eabi-gcc",
+                "CMAKE_CXX_COMPILER": "arm-none-eabi-g++",
+                "CMAKE_ASM_COMPILER": "arm-none-eabi-gcc"
+                
+        }
+    },
+    {
+        "name": "debug",
+        "displayName": "STM32 F411 Debug",
+        "description": "Сборка для отладки с отладочными флагами и минимальной оптимизацией",
+        "inherits": "base",
+        "cacheVariables": {
+            "CMAKE_BUILD_TYPE": "Debug"
+        }
+    },
+    {
+        "name": "release",
+        "displayName": "STM32 F411 Release",
+        "description": "Сборка для релиза с максимальной оптимизацией по скорости",
+        "inherits": "base",
+        "cacheVariables": {
+            "CMAKE_BUILD_TYPE": "Release"
+        }
+    }
+  ],
+  "buildPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "debug"
+        },
+        {
+            "name": "release",
+            "configurePreset": "release"
+        }
+    ]
+}

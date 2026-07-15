@@ -1,0 +1,8 @@
+Readmy.txt
+CMakeUserPresets.json
+launch.json
+build/
+.vscode/
+.cache/
+compile_commands.json
+c_cpp_properties.json
