@@ -21,7 +21,7 @@ int main(void);
 /* Прототипы системных исключений ядра (Индекс в vector[], IRQ не имеют) */
 WEAK_HANDLER(Reset_Handler);               /* Индекс 1 (Вектор сброса) */
 WEAK_HANDLER(NMI_Handler);                 /* Индекс 2 */
-WEAK_HANDLER(Hard_Handler);                /* Индекс 3 */
+WEAK_HANDLER(HardFault_Handler);                /* Индекс 3 */
 WEAK_HANDLER(MemManage_Handler);           /* Индекс 4 */
 WEAK_HANDLER(BusFault_Handler);            /* Индекс 5 */
 WEAK_HANDLER(UsageFault_Handler);          /* Индекс 6 */
@@ -30,7 +30,7 @@ WEAK_HANDLER(SVCall_Handler);              /* Индекс 11 */
 WEAK_HANDLER(DebugMonitor_Handler);        /* Индекс 12 */
 /* Индекс 13 зарезервирован (ноль в таблице) */
 WEAK_HANDLER(PendSV_Handler);              /* Индекс 14 */
-WEAK_HANDLER(Systick_Handler);             /* Индекс 15 */
+WEAK_HANDLER(SysTick_Handler);             /* Индекс 15 */
 
 /* Прототипы внешних прерываний периферии (Индекс в vector[] / Аппаратный номер IRQ) */
 WEAK_HANDLER(WWDG_Handler);                /* Индекс 16 / IRQ 0  */
@@ -92,25 +92,27 @@ WEAK_HANDLER(SPI4_Handler);                /* Индекс 71 / IRQ 84 */ /* П�
 WEAK_HANDLER(SPI5_Handler);                /* Индекс 72 / IRQ 85 */
 
 
-typedef void (*ISR_Handler)(void);
+typedef void (*ISR_Handler_t)(void);
 
-const ISR_Handler vector[] = {
+
+const ISR_Handler_t VectorTable[]
+__attribute__((section(".isr_vector"), used)) = {
     
     /*Системные векторы ядра ARM Cortex-M4*/
 
-    (ISR_Handler)&_estack,
+    (ISR_Handler_t)&_estack,
     Reset_Handler,                  /*Вектор сброса*/
     NMI_Handler,                    /*Немаскируемое прерывание Срабатывает при аварийных ситуациях (например, сбой внешнего кварца HSE или аппаратная ошибка питания)*/
-    Hard_Handler,                   /*(Аппаратный сбой). Возникает при критических ошибках*/
+    HardFault_Handler,                   /*(Аппаратный сбой). Возникает при критических ошибках*/
     MemManage_Handler,              /*Ошибка управления памятью. Срабатывает при нарушении прав доступа MPU*/
     BusFault_Handler,               /*Ошибка шины. Возникает при проблемах с доступом к памяти*/
     UsageFault_Handler,             /*Ошибка выполнения. Срабатывает при неверных операциях ядра*/
-    0,0,0,0,                        /*зарезервировано*/ 
+    Default_Handler,Default_Handler,Default_Handler,Default_Handler,            /*зарезервировано*/ 
     SVCall_Handler,                 /*Supervisor Call. Вызов системной функции через инструкцию SVC. Используется в RTOS*/
     DebugMonitor_Handler,           /*Отладочный монитор.*/
-    0,                              /*зарезервировано*/
+    Default_Handler,                           /*зарезервировано*/
     PendSV_Handler,                 /*Pendable Service Call. Асинхронный системный вызов. Обычно используется в операционных системах для мягкого переключения задач (планирования), когда ядро не занято обработкой других прерываний.*/
-    Systick_Handler,                /*Системный таймер SysTick. Встроенный в ядро 24-битный таймер*/
+    SysTick_Handler,                /*Системный таймер SysTick. Встроенный в ядро 24-битный таймер*/
 
     /*Специальные прерывания кристалла (ST)*/
 
@@ -141,6 +143,7 @@ const ISR_Handler vector[] = {
 
     ADC_Handler,                    /*Срабатывает при завершении регулярного/инжектированного преобразования АЦП, аналоговом "watchdog" (выход сигнала за границы напряжения) или ошибке переполнения данных (OVR).*/
 
+    Default_Handler,Default_Handler,Default_Handler,Default_Handler,
     /*Внешние прерывания EXTI (Порты ввода-вывода)*/
 
     EXTI9_5_Handler,                /*Групповое прерывание. Обрабатывает события на линиях GPIO от 5 до 9 (нужно программно опрашивать регистр EXTI->PR, чтобы понять, какая именно нога сработала).*/
@@ -155,50 +158,73 @@ const ISR_Handler vector[] = {
     I2C1_EV_Handler,                /*События (Events). Срабатывают при отправке адреса, приеме/передаче байта, условиях START/STOP.*/
     I2C1_ER_Handler,                /*Ошибки (Errors). Срабатывают при ошибке подтверждения (NACK), потере арбитража шины (ARLO) или ошибках шины (BERR).*/
     I2C2_EV_Handler,                /*События (Events). Срабатывают при отправке адреса, приеме/передаче байта, условиях START/STOP.*/
-    I2C2_ER_Handler, /*Ошибки (Errors). Срабатывают при ошибке подтверждения (NACK), потере арбитража шины (ARLO) или ошибках шины (BERR).*/
-    SPI1_Handler, /*енерируются при заполнении буфера приемника (RXNE), освобождении буфера передатчика (TXE) или системных ошибках*/
-    SPI2_Handler, /*енерируются при заполнении буфера приемника (RXNE), освобождении буфера передатчика (TXE) или системных ошибках*/
-    USART1_Handler, /*Прерывания приемопередатчиков USART. Сигнализируют о приеме байта (RXNE), завершении передачи (TC), освобождении регистра данных (TXE) или ошибках кадра (IDLE/PE/FE).*/
-    USART2_Handler, /*Прерывания приемопередатчиков USART. Сигнализируют о приеме байта (RXNE), завершении передачи (TC), освобождении регистра данных (TXE) или ошибках кадра (IDLE/PE/FE).*/
-
+    I2C2_ER_Handler,                /*Ошибки (Errors). Срабатывают при ошибке подтверждения (NACK), потере арбитража шины (ARLO) или ошибках шины (BERR).*/
+    SPI1_Handler,                   /*генерируются при заполнении буфера приемника (RXNE), освобождении буфера передатчика (TXE) или системных ошибках*/
+    SPI2_Handler,                   /*генерируются при заполнении буфера приемника (RXNE), освобождении буфера передатчика (TXE) или системных ошибках*/
+    USART1_Handler,                 /*Прерывания приемопередатчиков USART. Сигнализируют о приеме байта (RXNE), завершении передачи (TC), освобождении регистра данных (TXE) или ошибках кадра (IDLE/PE/FE).*/
+    USART2_Handler,                 /*Прерывания приемопередатчиков USART. Сигнализируют о приеме байта (RXNE), завершении передачи (TC), освобождении регистра данных (TXE) или ошибках кадра (IDLE/PE/FE).*/
+    Default_Handler,
     /*Внешние прерывания EXTI (Порты ввода-вывода)*/
 
-    EXTI15_10_Handler,/*Групповое прерывание. Обрабатывает события на линиях GPIO от 10 до 15.*/
-    EXTI17_RTC_Alarm_Handler,/*Будильник часов реального времени (RTC) через линию EXTI17.*/
-    EXTI18_OTG_FS_WKUP_Handler,/*Пробуждение системы по активности на шине USB OTG FS (через линию EXTI18).*/
+    EXTI15_10_Handler,              /*Групповое прерывание. Обрабатывает события на линиях GPIO от 10 до 15.*/
+    EXTI17_RTC_Alarm_Handler,       /*Будильник часов реального времени (RTC) через линию EXTI17.*/
+    EXTI18_OTG_FS_WKUP_Handler,     /*Пробуждение системы по активности на шине USB OTG FS (через линию EXTI18).*/
+    Default_Handler,Default_Handler,Default_Handler,Default_Handler,
+    /*Контроллеры прямого доступа к памяти (DMA)*/
+
+    DMA1_Stream7_Handler,           /*Прерывание потока 7 DMA1.*/
+    Default_Handler,
+    SDIO_Handler,                   /*Обрабатывает события обмена данными, команды и ошибки при работе с SD-картами.*/
+    TIM5_Handler,                   /*События таймера 5.*/
+    SPI3_Handler,                   /*генерируются при заполнении буфера приемника (RXNE), освобождении буфера передатчика (TXE) или системных ошибках*/
+    Default_Handler,Default_Handler,Default_Handler,Default_Handler,
+    /*Контроллеры прямого доступа к памяти (DMA)*/
+
+    DMA2_Stream0_Handler,           /*Прерывание потока 0 DMA2.*/
+    DMA2_Stream1_Handler,           /*Прерывание потока 1 DMA2.*/
+    DMA2_Stream2_Handler,           /*Прерывание потока 2 DMA2.*/
+    DMA2_Stream3_Handler,           /*Прерывание потока 3 DMA2.*/
+    DMA2_Stream4_Handler,           /*Прерывание потока 4 DMA2.*/
+
+    Default_Handler,Default_Handler,Default_Handler,Default_Handler,Default_Handler,Default_Handler,
+
+    OTG_FS_Handler,                 /*Основное прерывание работы контроллера USB в режиме Full Speed (события подключения, сброса шины, приема/передачи пакетов в конечных точках Endpoint).*/
 
     /*Контроллеры прямого доступа к памяти (DMA)*/
 
-    DMA1_Stream7_Handler, /*Прерывание потока 7 DMA1.*/
+    DMA2_Stream5_Handler,           /*Прерывание потока 5 DMA2.*/
+    DMA2_Stream6_Handler,           /*Прерывание потока 6 DMA2.*/
+    DMA2_Stream7_Handler,           /*Прерывание потока 7 DMA2.*/
 
-    SDIO_Handler,/*Обрабатывает события обмена данными, команды и ошибки при работе с SD-картами.*/
-    TIM5_Handler,/*События таймера 5.*/
-    SPI3_Handler,/*енерируются при заполнении буфера приемника (RXNE), освобождении буфера передатчика (TXE) или системных ошибках*/
-
-    /*Контроллеры прямого доступа к памяти (DMA)*/
-
-    DMA2_Stream0_Handler, /*Прерывание потока 0 DMA2.*/
-    DMA2_Stream1_Handler, /*Прерывание потока 1 DMA2.*/
-    DMA2_Stream2_Handler, /*Прерывание потока 2 DMA2.*/
-    DMA2_Stream3_Handler, /*Прерывание потока 3 DMA2.*/
-    DMA2_Stream4_Handler, /*Прерывание потока 4 DMA2.*/
-
-    OTG_FS_Handler, /*Основное прерывание работы контроллера USB в режиме Full Speed (события подключения, сброса шины, приема/передачи пакетов в конечных точках Endpoint).*/
-
-    /*Контроллеры прямого доступа к памяти (DMA)*/
-
-    DMA2_Stream5_Handler, /*Прерывание потока 5 DMA2.*/
-    DMA2_Stream6_Handler, /*Прерывание потока 6 DMA2.*/
-    DMA2_Stream7_Handler, /*Прерывание потока 7 DMA2.*/
-
-    USART6_Handler, /*Прерывания приемопередатчиков USART. Сигнализируют о приеме байта (RXNE), завершении передачи (TC), освобождении регистра данных (TXE) или ошибках кадра (IDLE/PE/FE).*/
-    I2C3_EV_Handler,/*События (Events). Срабатывают при отправке адреса, приеме/передаче байта, условиях START/STOP.*/
-    I2C3_ER_Handler,/*Ошибки (Errors). Срабатывают при ошибке подтверждения (NACK), потере арбитража шины (ARLO) или ошибках шины (BERR).*/
-    FPU_Handler, /*Срабатывает при исключительных ситуациях во встроенном математическом сокалькуляторе FPU (переполнение, деление на ноль, потеря точности при работе с числами float).*/
-    SPI4_Handler,/*енерируются при заполнении буфера приемника (RXNE), освобождении буфера передатчика (TXE) или системных ошибках*/
-    SPI5_Handler,/*енерируются при заполнении буфера приемника (RXNE), освобождении буфера передатчика (TXE) или системных ошибках*/    
+    USART6_Handler,                 /*Прерывания приемопередатчиков USART. Сигнализируют о приеме байта (RXNE), завершении передачи (TC), освобождении регистра данных (TXE) или ошибках кадра (IDLE/PE/FE).*/
+    I2C3_EV_Handler,                /*События (Events). Срабатывают при отправке адреса, приеме/передаче байта, условиях START/STOP.*/
+    I2C3_ER_Handler,                /*Ошибки (Errors). Срабатывают при ошибке подтверждения (NACK), потере арбитража шины (ARLO) или ошибках шины (BERR).*/
+    Default_Handler,Default_Handler,Default_Handler,Default_Handler,Default_Handler,Default_Handler,Default_Handler,
+    FPU_Handler,                    /*Срабатывает при исключительных ситуациях во встроенном математическом сокалькуляторе FPU (переполнение, деление на ноль, потеря точности при работе с числами float).*/
+    Default_Handler,Default_Handler,
+    SPI4_Handler,                   /*генерируются при заполнении буфера приемника (RXNE), освобождении буфера передатчика (TXE) или системных ошибках*/
+    SPI5_Handler,                   /*генерируются при заполнении буфера приемника (RXNE), освобождении буфера передатчика (TXE) или системных ошибках*/    
 };
 
+void Reset_Handler(void)
+{
+    uint32_t * pSource = &_sidata;
+    uint32_t * pDest = &_sdata;
+
+    while (pDest < &_edata)
+    {
+        *pDest++ = *pSource++;
+    }
+
+    pDest = &_sbss;
+    while(pDest < &_ebss)
+    {
+        *pDest++ = 0;
+    }
+    main();
+    while(1);
+    
+}
 
 void Default_Handler(void)
 {
