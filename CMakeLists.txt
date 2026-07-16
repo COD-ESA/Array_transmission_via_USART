@@ -48,8 +48,9 @@ set(OPTIMIZ_FLAGS_RELEASE
 set(LINK_FLAGS
     ${CPU_FLAGS}
     LINKER:--gc-sections #удалить неиспользуемые функции
-    LINKER:-T,LdScript/linkerScript.ld
+    LINKER:-T,${CMAKE_SOURCE_DIR}/LdScript/linkerScript.ld
 )
+
 
 add_executable(ATVU)
 
@@ -84,6 +85,7 @@ target_include_directories(ATVU PRIVATE
 )
 
 target_compile_definitions(ATVU PRIVATE STM32F411xE)
+set_target_properties(ATVU PROPERTIES SUFFIX ".elf")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(ATVU PRIVATE ${CPU_FLAGS} ${MY_DEVELOPER_WARNINGS} ${OPTIMIZ_FLAGS_DEBUG})
@@ -104,23 +106,23 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     )
 endif()
 
+find_program(ARM_SIZE
+    NAMES arm-none-eabi-size
+    REQUIRED
+)
+
 # для сборки F411
 add_custom_command(TARGET ATVU POST_BUILD
 
-    COMMAND arm-none-eabi-objcopy -O ihex
+    COMMAND ${CMAKE_OBJCOPY} -O ihex
         $<TARGET_FILE:ATVU>
         $<TARGET_FILE_DIR:ATVU>/ATVU.hex
 
-    COMMAND arm-none-eabi-objcopy -O binary
+    COMMAND ${CMAKE_OBJCOPY} -O binary
         $<TARGET_FILE:ATVU>
-        $<TARGET_FILE_DIR:ATVU>/ATVU.bin   
+        $<TARGET_FILE_DIR:ATVU>/ATVU.bin  
         
-    COMMENT "Generating HEX and BIN for ATVU"
-)
-
-add_custom_command(TARGET ATVU POST_BUILD
-
-    COMMAND arm-none-eabi-size $<TARGET_FILE:ATVU>
-
-    COMMENT "Calculating size of ATVU.elf"
+    COMMAND ${ARM_SIZE} $<TARGET_FILE:ATVU>
+        
+    COMMENT "Generating HEX and BIN for ATVU. Calculating size of ATVU.elf"
 )

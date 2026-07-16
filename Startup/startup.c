@@ -19,7 +19,7 @@ int main(void);
 
 
 /* Прототипы системных исключений ядра (Индекс в vector[], IRQ не имеют) */
-WEAK_HANDLER(Reset_Handler);               /* Индекс 1 (Вектор сброса) */
+// WEAK_HANDLER(Reset_Handler);               /* Индекс 1 (Вектор сброса) */
 WEAK_HANDLER(NMI_Handler);                 /* Индекс 2 */
 WEAK_HANDLER(HardFault_Handler);                /* Индекс 3 */
 WEAK_HANDLER(MemManage_Handler);           /* Индекс 4 */
@@ -228,11 +228,7 @@ void Reset_Handler(void)
 
 void Default_Handler(void)
 {
-    while(1)
-    {
-
-    }
+    while(1){}
 }
-
 
 
