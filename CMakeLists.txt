@@ -56,6 +56,10 @@ add_executable(ATVU)
 
 target_sources(ATVU PRIVATE
     Src/main.c
+    Src/ManualSystemInit.c
+    Src/InitFlash.c
+    Src/ledLight.c
+    Src/mco1.c
     Startup/startup.c
 )
 
@@ -106,11 +110,13 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     )
 endif()
 
+# Поиск программы arm-none-eabi-size
 find_program(ARM_SIZE
     NAMES arm-none-eabi-size
     REQUIRED
 )
-
+# Проверка, что программа найдена
+message( "ARM_SIZE" =  ${ARM_SIZE})
 # для сборки F411
 add_custom_command(TARGET ATVU POST_BUILD
 
