@@ -54,11 +54,7 @@ void ManualSystemInit(void)
       ); 
     
     uint32_t rcc_cfgr = RCC -> CFGR;
-/*
-    RCC -> CFGR &= ~RCC_CFGR_HPRE; // AHB prescaler = HCLK = SYSCLK
-    RCC -> CFGR |= RCC_CFGR_PPRE1_DIV2; // APB1 prescaler = 2 (48 MHz)
-    RCC -> CFGR |= RCC_CFGR_PPRE2_DIV1; // APB2 prescaler = 1 (96 MHz)
-*/
+
     /*ON PLL*/    
     RCC -> CR |= RCC_CR_PLLON; // Включаем PLL
   
@@ -73,18 +69,16 @@ void ManualSystemInit(void)
     }   
 
     /*6*/
-    rcc_cfgr &= ~RCC_CFGR_HPRE;
-    rcc_cfgr &= ~RCC_CFGR_SW;
+    rcc_cfgr &= ~RCC_CFGR_HPRE; /* AHB prescaler = HCLK = SYSCLK*/
+    rcc_cfgr &= ~RCC_CFGR_SW;  /*Очищаем биты выбора источника SYSCLK*/
 
     rcc_cfgr |= (
-      RCC_CFGR_PPRE1_DIV2 |
-      RCC_CFGR_PPRE2_DIV1 |
+      RCC_CFGR_PPRE1_DIV2 | /*APB1 prescaler = 2 (48 MHz)*/
+      RCC_CFGR_PPRE2_DIV1 | /*APB2 prescaler = 1 (96 MHz)*/
       RCC_CFGR_SW_PLL
     );
 
     RCC -> CFGR = rcc_cfgr;
-    // RCC -> CFGR &= ~(RCC_CFGR_SW); // Очищаем биты выбора источника SYSCLK
-    // RCC -> CFGR |= RCC_CFGR_SW_PLL; // Выбираем PLL в качестве источника SYSCLK
     while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL);
     // Implementation for manual system initialization
 }
