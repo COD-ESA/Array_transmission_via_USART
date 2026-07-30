@@ -1,6 +1,7 @@
 Readmy.txt
 CMakeUserPresets.json
 launch.json
+temp.txt
 build/
 .vscode/
 .cache/
