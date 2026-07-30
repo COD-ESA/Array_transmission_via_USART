@@ -46,12 +46,30 @@ void ManualSystemInit(void)
     RCC -> CR &= ~RCC_CR_PLLON; // Выключаем PLL перед настройкой
     while (RCC->CR & RCC_CR_PLLRDY); // жду выключения PLL
 
+  
+    /*настройка PLL на 96МГц*/
+    // RCC -> PLLCFGR = (
+    //   RCC_PLLCFGR_PLLSRC_HSE | // выбор источника тактирования от HSE
+    //   (25U << RCC_PLLCFGR_PLLM_Pos) | /*M 25*/
+    //   (192U << RCC_PLLCFGR_PLLN_Pos) | /*N 192*/
+    //   (0U << RCC_PLLCFGR_PLLP_Pos) /*P 2*/
+    //   ); 
+    
+    /*настройка PLL на 100МГц*/  
     RCC -> PLLCFGR = (
       RCC_PLLCFGR_PLLSRC_HSE | // выбор источника тактирования от HSE
       (25U << RCC_PLLCFGR_PLLM_Pos) | /*M 25*/
-      (192U << RCC_PLLCFGR_PLLN_Pos) | /*N 192*/
+      (200U << RCC_PLLCFGR_PLLN_Pos) | /*N 200*/
       (0U << RCC_PLLCFGR_PLLP_Pos) /*P 2*/
-      ); 
+    ); 
+
+    /*Тестовый разгон тактирования до 120МГц*/
+    //     RCC -> PLLCFGR = (
+    //   RCC_PLLCFGR_PLLSRC_HSE | // выбор источника тактирования от HSE
+    //   (25U << RCC_PLLCFGR_PLLM_Pos) | /*M 25*/
+    //   (240U << RCC_PLLCFGR_PLLN_Pos) | /*N 240*/
+    //   (0U << RCC_PLLCFGR_PLLP_Pos) /*P 2*/
+    // ); 
     
     /*6*/
     uint32_t rcc_cfgr = RCC -> CFGR;
@@ -60,12 +78,17 @@ void ManualSystemInit(void)
     rcc_cfgr &= ~RCC_CFGR_SW;  /*Очищаем биты выбора источника SYSCLK*/
 
     rcc_cfgr |= (
-      RCC_CFGR_PPRE1_DIV2 | /*APB1 prescaler = 2 (48 MHz)*/
-      RCC_CFGR_PPRE2_DIV1 | /*APB2 prescaler = 1 (96 MHz)*/
+      RCC_CFGR_PPRE1_DIV2 | /*APB1 prescaler = 2 (50 MHz)*/
+      RCC_CFGR_PPRE2_DIV1 | /*APB2 prescaler = 1 (100 MHz)*/
       RCC_CFGR_SW_PLL /*выбор PLL источником тактирования SYSCLK*/
     );
 
-    
+    /*тестовая настройка шин под частоту 120МГц*/
+    // rcc_cfgr |= (
+    //   RCC_CFGR_PPRE1_DIV4 | /*APB1 prescaler = 4 (30 MHz)*/
+    //   RCC_CFGR_PPRE2_DIV1 | /*APB2 prescaler = 1 (120 MHz)*/
+    //   RCC_CFGR_SW_PLL /*выбор PLL источником тактирования SYSCLK*/
+    // );
 
     /*ON PLL*/    
     RCC -> CR |= RCC_CR_PLLON; // Включаем PLL
