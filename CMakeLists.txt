@@ -53,6 +53,7 @@ set(LINK_FLAGS
 
 
 add_executable(ATVU)
+add_executable(ATVU_SLAVE)
 
 target_sources(ATVU PRIVATE
     Src/main.c
@@ -60,7 +61,36 @@ target_sources(ATVU PRIVATE
     Src/InitFlash.c
     Src/ledLight.c
     Src/mco1.c
+    Src/initDMA1.c
     Startup/startup.c
+    Src/writeFlash.c
+    Src/activateReceptionUsart.c
+    Src/IRQn.c
+    Src/initUsart.c
+    Src/branch_initUsart.S
+    Src/numberCounter.c
+    Src/readValueRegistr.c
+    Src/initTimer.c
+)
+
+target_sources( ATVU_SLAVE PRIVATE
+    Src/slave/mainSlave.c
+    Src/ManualSystemInit.c
+    Src/InitFlash.c
+    Src/ledLight.c
+    Src/mco1.c
+    Src/initDMA1.c
+    Startup/startup.c
+    Src/writeFlash.c
+    # Src/activateReceptionUsart.c
+    Src/IRQn.c
+    Src/slave/initUsartSlave.c
+    Src/branch_initUsart.S
+    Src/numberCounter.c
+    Src/readValueRegistr.c
+    # Src/slave/getDataUsartSaveInFlash.c
+    Src/slave/specialSettingUsart.c
+    Src/slave/activateReceptionUsartSlave.c
 )
 
 # создание переменной COMMON_INCLUDES_BLACK и запись в нее общих исходников для F411
@@ -88,8 +118,17 @@ target_include_directories(ATVU PRIVATE
     ${COMMON_INCLUDES_F411}
 )
 
+# Добавление исходников для платы black_pill ведомой
+target_include_directories(ATVU_SLAVE PRIVATE
+    Inc
+    ${COMMON_INCLUDES_F411}
+)
+
 target_compile_definitions(ATVU PRIVATE STM32F411xE)
 set_target_properties(ATVU PROPERTIES SUFFIX ".elf")
+
+target_compile_definitions(ATVU_SLAVE PRIVATE STM32F411xE)
+set_target_properties(ATVU_SLAVE PROPERTIES SUFFIX ".elf")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(ATVU PRIVATE ${CPU_FLAGS} ${MY_DEVELOPER_WARNINGS} ${OPTIMIZ_FLAGS_DEBUG})
@@ -104,6 +143,25 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     )
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_link_options(ATVU PRIVATE
+        ${LINK_FLAGS}
+        -s
+        -flto
+    )
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(ATVU_SLAVE PRIVATE ${CPU_FLAGS} ${MY_DEVELOPER_WARNINGS} ${OPTIMIZ_FLAGS_DEBUG})
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_compile_options(ATVU_SLAVE PRIVATE ${CPU_FLAGS} ${MY_DEVELOPER_WARNINGS} ${OPTIMIZ_FLAGS_RELEASE})
+endif()    
+
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_link_options(ATVU_SLAVE PRIVATE
+        ${LINK_FLAGS}
+    )
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_link_options(ATVU_SLAVE PRIVATE
         ${LINK_FLAGS}
         -s
         -flto
@@ -131,4 +189,19 @@ add_custom_command(TARGET ATVU POST_BUILD
     COMMAND ${ARM_SIZE} $<TARGET_FILE:ATVU>
         
     COMMENT "Generating HEX and BIN for ATVU. Calculating size of ATVU.elf"
+)
+
+add_custom_command(TARGET ATVU_SLAVE POST_BUILD
+
+    COMMAND ${CMAKE_OBJCOPY} -O ihex
+        $<TARGET_FILE:ATVU_SLAVE>
+        $<TARGET_FILE_DIR:ATVU_SLAVE>/ATVU_SLAVE.hex
+
+    COMMAND ${CMAKE_OBJCOPY} -O binary
+        $<TARGET_FILE:ATVU_SLAVE>
+        $<TARGET_FILE_DIR:ATVU_SLAVE>/ATVU_SLAVE.bin  
+        
+    COMMAND ${ARM_SIZE} $<TARGET_FILE:ATVU_SLAVE>
+        
+    COMMENT "Generating HEX and BIN for ATVU_SLAVE. Calculating size of ATVU_SLAVE.elf"
 )
