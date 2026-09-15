@@ -2,6 +2,8 @@
 
 #include "main.h"
 
+#define VECT_TAB_OFFSET 0x4000
+
 #define WEAK_HANDLER(name) void name(void) __attribute__ ((weak, alias("Default_Handler")))
 /*блок внешних секций объявленных в файле линкера*/
 extern uint32_t _estack; /*Адрес вершины стека*/
@@ -92,9 +94,10 @@ WEAK_HANDLER(SPI4_Handler);                /* Индекс 71 / IRQ 84 */ /* П�
 WEAK_HANDLER(SPI5_Handler);                /* Индекс 72 / IRQ 85 */
 
 
+// Создаю новый тип данных - указатель на ыункцию
 typedef void (*ISR_Handler_t)(void);
 
-
+// Создаю массив указателей на функции
 const ISR_Handler_t VectorTable[]
 __attribute__((section(".isr_vector"), used)) = {
     
@@ -207,7 +210,11 @@ __attribute__((section(".isr_vector"), used)) = {
 };
 
 void Reset_Handler(void)
-{
+{   
+    // смещение для таблицы векторов прерываний программы котороя будет загружаться
+    // моим самописным bootloaderom
+    SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; // 0x08000000 + 0x4000
+
     uint32_t * pSource = &_sidata;
     uint32_t * pDest = &_sdata;
 
@@ -221,9 +228,9 @@ void Reset_Handler(void)
     {
         *pDest++ = 0;
     }
+    ManualSystemInit();
     main();
     while(1);
-    
 }
 
 void Default_Handler(void)
