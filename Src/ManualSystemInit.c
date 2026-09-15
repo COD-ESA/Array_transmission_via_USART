@@ -64,7 +64,7 @@ void ManualSystemInit(void)
     ); 
 
     /*Тестовый разгон тактирования до 120МГц*/
-    //     RCC -> PLLCFGR = (
+    //   RCC -> PLLCFGR = (
     //   RCC_PLLCFGR_PLLSRC_HSE | // выбор источника тактирования от HSE
     //   (25U << RCC_PLLCFGR_PLLM_Pos) | /*M 25*/
     //   (240U << RCC_PLLCFGR_PLLN_Pos) | /*N 240*/
