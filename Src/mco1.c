@@ -17,11 +17,12 @@ void config_mco1(void)
     GPIOA->OSPEEDR &= ~GPIO_OSPEEDR_OSPEED8;
     GPIOA->OSPEEDR |= GPIO_OSPEEDR_OSPEED8;
     GPIOA->AFR[1] &= ~(GPIO_AFRH_AFSEL8);
-    GPIOA->AFR[1] |= (0x0 << GPIO_AFRH_AFSEL8_Pos); 
+    // GPIOA->AFR[1] |= (0U << GPIO_AFRH_AFSEL8_Pos); 
 
-    /*3. Настроить MCO1 на вывод HSE с делителем 1*/
+    /*3. Настроить MCO1 на вывод HSE с делителем 4*/
     RCC->CFGR &= ~(RCC_CFGR_MCO1 | RCC_CFGR_MCO1PRE); // Очистка битов MCO1 и MCO1PRE
     // RCC->CFGR |= (RCC_CFGR_MCO1_1); // Установка MCO1 = HSE, делитель = 0 
-    RCC->CFGR |= (RCC_CFGR_MCO1 | RCC_CFGR_MCO1PRE_2 | RCC_CFGR_MCO1PRE_1); // Установка MCO1 = PLL, делитель = 0  
+    // RCC->CFGR |= (RCC_CFGR_MCO1 | RCC_CFGR_MCO1PRE_2 | RCC_CFGR_MCO1PRE_1); // Установка MCO1 = PLL, делитель = 4  
+    RCC->CFGR |= RCC_CFGR_MCO1; // Установка MCO1 = PLL, делитель = 0  
     
 }
