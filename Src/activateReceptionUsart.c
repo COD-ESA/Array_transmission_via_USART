@@ -70,24 +70,19 @@ void receptionDataUSARTx(FUNC func, uint8_t address, USART_TypeDef *USARTx, uint
    
     while(*message){
         while(!(USARTx -> SR & USART_SR_TXE)){ /*жду освобождения передатчика*/}
-        // uint16_t result = ((uint16_t)*message++) & 0x00FF;
         uint8_t result = (uint8_t)*message++;
-        // USARTx -> DR = ((uint16_t)*message++) & 0x00FF;//операция (& 0x00FF)  для очистки 9 бита из данных
         USARTx->DR = result;
     }
 
     while(*str_value){
         while(!(USARTx -> SR & USART_SR_TXE)){ /*жду освобождения передатчика*/}
-        // USARTx -> DR = ((uint16_t)*str_value++) & 0x00FF;//очистка от 9 бита
         USARTx->DR = (uint8_t)*str_value++;
     }
 
     while(!(USARTx -> SR & USART_SR_TXE)){/*жду освобождения передатчика*/}
-    // uint16_t result = ((uint16_t)'\r') & 0x00FF; //очистка от 9 бита   
     USARTx->DR = (uint8_t)'\r';
 
     while(!(USARTx -> SR & USART_SR_TXE)){/*жду освобождения передатчика*/}
-    // result = ((uint16_t)'\n') & 0x00FF; //очистка от 9 бита
     USARTx->DR = (uint8_t)'\n';
 }
 
